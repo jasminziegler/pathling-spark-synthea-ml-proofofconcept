@@ -1,0 +1,36 @@
+FROM cluster-base
+
+# -- Layer: Apache Spark
+
+# https://archive.apache.org/dist/spark/spark-3.3.0/
+ARG spark_version=3.3.0
+ARG hadoop_version=3
+#ARG scala_version=2.13
+#ARG spark_filename=spark-${spark_version}-bin-hadoop${hadoop_version}-scala${scala_version}
+ARG spark_filename=spark-${spark_version}-bin-hadoop${hadoop_version}
+
+RUN apt-get update -y && \
+    apt-get install -y curl && \
+    curl https://archive.apache.org/dist/spark/spark-${spark_version}/${spark_filename}.tgz -o spark.tgz
+RUN tar -xf spark.tgz && \
+    mv ${spark_filename} /usr/bin/ && \
+    mkdir /usr/bin/${spark_filename}/logs && \
+    rm spark.tgz
+
+ENV SPARK_HOME=/usr/bin/${spark_filename}
+ENV SPARK_MASTER_HOST=spark-master
+ENV SPARK_MASTER_PORT=7077
+ENV PYSPARK_PYTHON=python3
+ENV PATH="${PATH}:${SPARK_HOME}/bin"
+
+# taken from https://github.com/jupyter/docker-stacks/blob/master/pyspark-notebook/Dockerfile#L51
+# Fix Spark installation for Java 11 and Apache Arrow library
+# see: https://github.com/apache/spark/pull/27356, https://spark.apache.org/docs/latest/#downloading
+RUN cp -p "${SPARK_HOME}/conf/spark-defaults.conf.template" "${SPARK_HOME}/conf/spark-defaults.conf" && \
+    echo 'spark.driver.extraJavaOptions -Dio.netty.tryReflectionSetAccessible=true' >> "${SPARK_HOME}/conf/spark-defaults.conf" && \
+    echo 'spark.executor.extraJavaOptions -Dio.netty.tryReflectionSetAccessible=true' >> "${SPARK_HOME}/conf/spark-defaults.conf"
+
+
+# -- Runtime
+
+WORKDIR ${SPARK_HOME}

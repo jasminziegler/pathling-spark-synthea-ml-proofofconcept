@@ -1,0 +1,20 @@
+# pathling requires java 11
+ARG debian_image_tag=11-jre-slim-bullseye
+FROM openjdk:${debian_image_tag}
+
+# -- Layer: OS + Python 3.7
+
+ARG shared_workspace=/opt/workspace
+
+RUN mkdir -p ${shared_workspace} && \
+    apt-get update -y && \
+    apt-get install -y python3 && \
+    ln -s /usr/bin/python3 /usr/bin/python && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV SHARED_WORKSPACE=${shared_workspace}
+
+# -- Runtime
+
+VOLUME ${shared_workspace}
+CMD ["bash"]
