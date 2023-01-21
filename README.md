@@ -1,4 +1,4 @@
-# demo-kafka-spark-pipeline
+# pathling-spark-synthea-ml-POC
 
 ## Description
 
